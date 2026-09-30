@@ -11,14 +11,16 @@ export default {
   contactEmail: env.CONTACT_EMAIL || "hello@resumeforge.example.com",
   country: "Pakistan",
 
-  // Supabase (login + cloud saving). Public values — safe to expose.
-  supabaseUrl: env.SUPABASE_URL || "",
-  supabaseAnonKey: env.SUPABASE_ANON_KEY || "",
+  // "Continue with Google" is switched on when GOOGLE_CLIENT_ID is set.
+  // (The secret and the database binding are only used by the server.)
+  authEnabled: !!env.GOOGLE_CLIENT_ID || env.DEV_LOGIN === "1",
+  devLogin: env.DEV_LOGIN === "1" && !env.GOOGLE_CLIENT_ID,   // local testing only
 
-  // AI
+  // AI (Cloudflare Workers AI — no API key needed)
   aiEnabled: bool(env.AI_ENABLED, true),
-  aiRequireLogin: bool(env.AI_REQUIRE_LOGIN, true),
-  aiDailyCredits: parseInt(env.AI_DAILY_CREDITS || "30", 10),
+  aiRequireLogin: bool(env.AI_REQUIRE_LOGIN, false),   // false = guests get a small daily allowance
+  aiDailyCredits: parseInt(env.AI_DAILY_CREDITS || "15", 10),
+  aiGuestCredits: parseInt(env.AI_GUEST_DAILY_CREDITS || "6", 10),
 
   // Google AdSense — leave empty until your site is approved.
   adsenseClient: env.ADSENSE_CLIENT || "",           // e.g. ca-pub-1234567890123456

@@ -1,5 +1,4 @@
 import { $, esc, fitPage } from "./ui.mjs";
-import { authEnabled } from "./auth.mjs";
 import { getPublicResume } from "./store.mjs";
 import { printResume, fileBase } from "./export.mjs";
 import { renderResume } from "/js/shared/render.mjs";
@@ -8,7 +7,6 @@ import { renderResume } from "/js/shared/render.mjs";
   const id = new URLSearchParams(location.search).get("id");
   const fail = t => { $("#shTitle").textContent = "Resume not available"; $("#shMsg").textContent = t; };
   if (!id || !/^[0-9a-f-]{36}$/i.test(id)) return fail("This link is incomplete. Ask the owner to send it again.");
-  if (!authEnabled) return fail("Sharing isn't set up on this site.");
   try {
     const r = await getPublicResume(id);
     if (!r) return fail("This resume is private or the owner turned off link sharing.");

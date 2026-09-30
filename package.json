@@ -2,12 +2,14 @@
   "name": "resume-forge",
   "version": "1.0.0",
   "private": true,
-  "description": "Free AI resume builder — static site + Cloudflare Pages Functions. No npm dependencies.",
+  "description": "Free AI resume builder \u2014 static site + Cloudflare Pages Functions, Workers AI and D1. No npm dependencies.",
   "type": "module",
-  "engines": { "node": ">=18" },
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "build": "node build/build.mjs",
     "dev": "node build/build.mjs && node build/dev-server.mjs",
-    "dev:mock": "node build/build.mjs && MOCK_AI=1 node build/dev-server.mjs"
+    "dev:mock": "node build/build.mjs --dev && node build/dev-server.mjs --mock --dev-login"
   }
 }

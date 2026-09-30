@@ -11,6 +11,7 @@ import { TEMPLATES, TAG_LABELS, FONTS, ACCENTS, getTemplate } from "/js/shared/t
 import { emptyResume, normalizeResume, normalizeSettings, NEW_ITEM, SECTION_LABELS, SECTION_KEYS } from "/js/shared/schema.mjs";
 import { EXAMPLE } from "/js/shared/sample.mjs";
 import { EXAMPLES } from "/js/shared/examples.mjs";
+import { lintResume } from "/js/shared/lint.mjs";
 
 /* ============================== state ============================== */
 const S = {
@@ -97,7 +98,7 @@ async function save() {
   if (d.id && S.user) {
     setSave("saving");
     try { await store.updateResume(d.id, payload); setSave("cloud"); }
-    catch (e) { setSave("error", "Couldn't save online"); console.error(e); }
+    catch (e) { setSave("error", "Couldn't save online"); if (e?.status) console.error(e); }
     store.saveLocal({ ...payload, cloudId: d.id, isExample: false, updatedAt: Date.now() });
   } else {
     store.saveLocal({ ...payload, isExample: d.isExample, updatedAt: Date.now() });
@@ -139,7 +140,11 @@ function renderPreview(anim = false) {
   if (anim) setTimeout(() => holder.classList.remove("page-anim"), 400);
   fitPreview();
   $("#tplName").textContent = getTemplate(S.doc.settings.template).name;
+  const sc = lintResume(S.doc.data).score, chip = $("#scoreChip");
+  chip.querySelector("i").textContent = sc;
+  chip.className = "score-chip " + (sc >= 80 ? "good" : sc >= 55 ? "ok" : "low");
 }
+$("#scoreChip").onclick = () => runInstant();
 function fitPreview() {
   const inner = $("#pageScale"), holder = $("#pageHolder");
   const page = inner.firstElementChild; if (!page) return;
@@ -466,22 +471,32 @@ function renderEditorPhotoNote() { if (S.tab === "content" || innerWidth >= 980)
 function renderAIPane() {
   const gate = aiAvailable() && aiNeedsLogin() && !S.user;
   const u = S.usage;
+  const guestUp = aiAvailable() && authEnabled && !S.user && !gate;
   $("#paneAI").innerHTML = `
-  <div class="pane-h"><h2>AI tools</h2>${u ? `<span class="muted" style="font-size:13px">${Math.max(0, u.limit - u.used)} of ${u.limit} left today</span>` : ""}</div>
-  ${!aiAvailable() ? `<div class="notice warn">AI features are not switched on for this site yet.</div>` : ""}
+  <div class="pane-h"><h2>AI tools</h2>${u ? `<span class="muted" style="font-size:13px">${Math.max(0, u.limit - u.used)} of ${u.limit} credits left today</span>` : ""}</div>
+  ${!aiAvailable() ? `<div class="notice warn">AI features are not switched on for this site yet. The instant check below still works.</div>` : ""}
   ${gate ? `<div class="signin-gate"><b>Sign in to unlock the AI tools — free</b><span class="muted" style="font-size:14px">We ask you to sign in so we can give everyone a fair daily allowance. Your resume stays exactly as it is.</span><button class="btn btn-google" type="button" data-act="google">${ICON.google} Continue with Google</button></div>` : ""}
   ${u ? `<div class="credits"><span>Today</span><div class="meter"><i style="width:${Math.min(100, (u.used / u.limit) * 100)}%"></i></div><span>${u.used}/${u.limit}</span></div>` : ""}
+  ${guestUp ? `<div class="notice" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><span>You're using free guest credits. Sign in to get ${esc(CFG.aiDailyLimit || 15)} a day.</span><button class="btn btn-sm btn-google" type="button" data-act="google">${ICON.google} Sign in</button></div>` : ""}
+  <div class="ai-card"><h3>${ICON.gauge} Instant check <span class="pill">Free · unlimited</span></h3><p>A quick score out of 100 with specific fixes, calculated right here in your browser. No AI credits used.</p><button class="btn" type="button" data-act="instant">Check now</button></div>
   <div class="ai-card"><h3>${ICON.upload} Import & rewrite my old CV</h3><p>Upload a PDF, Word file or photo. AI fills every field and rewrites it in a stronger, professional style.</p><button class="btn btn-ai" type="button" data-act="ai-mode" data-mode="import">Upload CV</button></div>
   <div class="ai-card"><h3>${ICON.sparkle} Improve my whole resume</h3><p>Sharper bullet points, a proper summary, cleaned-up skills and grammar. Never invents facts.</p><button class="btn btn-ai" type="button" data-act="ai-mode" data-mode="improve">Improve with AI</button></div>
   <div class="ai-card"><h3>${ICON.target} Tailor to a job ad</h3><p>Paste a job description. AI reorders and rewrites your resume around what the employer asked for, and shows matched and missing keywords.</p><button class="btn btn-ai" type="button" data-act="ai-mode" data-mode="tailor">Tailor to a job</button></div>
-  <div class="ai-card"><h3>${ICON.gauge} ATS score check</h3><p>Get a recruiter-style score out of 100, what's working, and exactly what to fix — without changing anything.</p><button class="btn" type="button" data-act="ai-mode" data-mode="review">Check my score</button></div>
+  <div class="ai-card"><h3>${ICON.gauge} Deep ATS review (AI)</h3><p>A recruiter-style AI review of your wording, impact and keywords, with exactly what to fix — without changing anything.</p><button class="btn" type="button" data-act="ai-mode" data-mode="review">Get AI review</button></div>
   <div class="ai-card"><h3>${ICON.mail} Cover letter</h3><p>Write a matching cover letter from this resume and a job ad in about 30 seconds.</p><a class="btn" href="/cover-letter-generator/">Write a cover letter</a></div>`;
 }
 $("#paneAI").addEventListener("click", e => {
   const b = e.target.closest("[data-act]"); if (!b) return;
   if (b.dataset.act === "ai-mode") openAIModal(b.dataset.mode);
+  if (b.dataset.act === "instant") runInstant();
   if (b.dataset.act === "google") startGoogle(`/builder/${S.doc.id ? "?id=" + S.doc.id + "&" : "?"}tab=ai`);
 });
+function runInstant() {
+  S.review = { mode: "instant", ...lintResume(S.doc.data), animate: true };
+  switchTab("content");
+  renderEditorBanner();
+  $("#panel").scrollTop = 0;
+}
 async function startGoogle(next) {
   saveSoon.flush();
   try { await signInWithGoogle(next); } catch (err) { toast(err.message || "Sign-in failed"); }
@@ -493,14 +508,18 @@ function needGate() {
   if (aiNeedsLogin() && !S.user) { openSignInModal(); return true; }
   return false;
 }
-function openSignInModal(reason = "Use AI for free") {
+function openSignInModal(reason = "Use AI for free", note = "") {
   const next = `/builder/${S.doc.id ? "?id=" + S.doc.id : ""}`;
-  const m = openModal(`<h2>${esc(reason)}</h2><p class="sub">Sign in once and get ${esc(CFG.aiDailyLimit || 30)} free AI credits every day, plus cloud saving for all your resumes.</p>
+  if (!authEnabled) { toast(reason); return; }
+  const m = openModal(`<h2>${esc(reason)}</h2><p class="sub">${note ? esc(note) + " " : ""}Sign in once and get ${esc(CFG.aiDailyLimit || 15)} free AI credits every day, plus cloud saving for all your resumes.</p>
     <ul class="perks"><li>Your current resume is kept — nothing is lost</li><li>No credit card, no payment, ever</li><li>We never post anything to your Google account</li></ul>
-    <button class="btn btn-google btn-lg btn-block" type="button" data-g>${ICON.google} Continue with Google</button>
-    <a class="btn btn-ghost btn-block" href="/login/" data-email>Use email instead</a>`);
+    <button class="btn btn-google btn-lg btn-block" type="button" data-g>${ICON.google} Continue with Google</button>`);
   m.el.querySelector("[data-g]").onclick = () => startGoogle(next);
-  m.el.querySelector("[data-email]").onclick = () => { saveSoon.flush(); try { localStorage.setItem("rf:next", next); } catch {} };
+}
+function aiFail(err) {
+  if (err?.code === "cancelled") return;
+  if ((err?.code === "guest_limit" || err?.code === "auth") && authEnabled && !S.user) return openSignInModal("Get more free AI credits", err.code === "guest_limit" ? "You've used today's guest credits." : "");
+  toast(err?.message || aiMessage(err?.code));
 }
 const stripPhoto = d => { const c = clone(d); delete c.photo; return c; };
 
@@ -513,7 +532,7 @@ async function aiSummary(btn) {
     const opts = (j.result?.options || []).filter(Boolean);
     if (!opts.length) throw { code: "server" };
     showOptions(btn, "Pick a summary", opts, v => { pushHistory(); S.doc.data.summary = v; changed({ editor: true }); });
-  } catch (err) { if (err.code !== "cancelled") toast(err.message || aiMessage(err.code)); }
+  } catch (err) { aiFail(err); }
   finally { btn.disabled = false; lbl.textContent = old; }
 }
 async function aiBullet(btn, i, j) {
@@ -525,8 +544,8 @@ async function aiBullet(btn, i, j) {
     const r = await callAI("rewrite", { kind: "bullet", text, context: { role: e.role, company: e.company, title: S.doc.data.title } });
     const opts = (r.result?.options || []).filter(Boolean);
     if (!opts.length) throw { code: "server" };
-    showOptions(btn, text ? "Pick a stronger version" : "Pick a line to add", opts, v => { pushHistory(); e.bullets[j] = v; changed({ editor: true }); });
-  } catch (err) { if (err.code !== "cancelled") toast(err.message || aiMessage(err.code)); }
+    showOptions(btn, (text ? "Pick a stronger version" : "Pick a line to add") + (r.onDevice ? " · written on your device, no credits used" : ""), opts, v => { pushHistory(); e.bullets[j] = v; changed({ editor: true }); });
+  } catch (err) { aiFail(err); }
   finally { btn.disabled = false; btn.innerHTML = ICON.sparkle; }
 }
 async function aiSkills(btn) {
@@ -538,7 +557,7 @@ async function aiSkills(btn) {
     const have = S.doc.data.skills.map(s => s.toLowerCase());
     const list = (r.result?.skills || []).filter(s => s && !have.includes(String(s).toLowerCase()));
     $("#skillSuggest").innerHTML = list.length ? list.map(s => `<button type="button" data-act="skill-add" data-skill="${esc(s)}">+ ${esc(s)}</button>`).join("") : `<span class="note">Your skills already look complete.</span>`;
-  } catch (err) { if (err.code !== "cancelled") toast(err.message || aiMessage(err.code)); }
+  } catch (err) { aiFail(err); }
   finally { btn.disabled = false; lbl.textContent = old; }
 }
 function showOptions(anchor, title, options, apply) {
@@ -674,7 +693,7 @@ function openAIModal(mode) {
     } catch (err) {
       setBusy(false);
       if (err?.code === "cancelled") return;
-      if (err?.code === "auth") { m.close(); openSignInModal("Sign in to use AI"); return; }
+      if ((err?.code === "auth" || err?.code === "guest_limit") && authEnabled && !S.user) { m.close(); openSignInModal(err.code === "auth" ? "Sign in to use AI" : "Get more free AI credits", err.code === "guest_limit" ? "You've used today's guest credits." : ""); return; }
       setErr(err?.message || aiMessage(err?.code));
       return;
     }
@@ -709,7 +728,7 @@ function reviewHTML() {
   const r = S.review;
   const a = Math.max(0, Math.min(100, Math.round(r.score || 0))), b = Math.round(r.scoreBefore || 0);
   const C = 2 * Math.PI * 31, from = C * (1 - (b && b < a ? b : 0) / 100), to = C * (1 - a / 100);
-  const title = { review: "ATS score", check: "ATS score", improve: "AI improvement", tailor: "Tailored to the job", extract: "CV imported" }[r.mode] || "AI review";
+  const title = { instant: "Instant check", review: "AI review", check: "ATS score", improve: "AI improvement", tailor: "Tailored to the job", extract: "CV imported" }[r.mode] || "AI review";
   const list = (h, items, n) => items?.length ? `<h4>${h}</h4><ul>${items.slice(0, n).map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : "";
   return `<div class="review" role="status">
     <h3>${title}</h3>
@@ -718,7 +737,7 @@ function reviewHTML() {
     ${r.kwHit?.length ? `<h4>Job keywords you match</h4><div class="kw hit">${r.kwHit.slice(0, 16).map(k => `<span>${esc(k)}</span>`).join("")}</div>` : ""}
     ${r.kwMiss?.length ? `<h4>In the job ad but missing — add only if true</h4><div class="kw miss">${r.kwMiss.slice(0, 12).map(k => `<span>${esc(k)}</span>`).join("")}</div>` : ""}
     ${list("What's working", r.strengths, 5)}${list("Fix these", r.issues, 7)}${list("What changed", r.changes, 8)}${list("Make it even stronger", r.tips, 6)}
-    <div class="row">${S.beforeAI ? `<button type="button" class="btn btn-sm" data-act="revert">${ICON.undo} ${r.mode === "extract" || r.mode === "check" ? "Restore my previous resume" : "Undo AI changes"}</button>` : ""}${r.mode === "review" || r.mode === "check" || r.mode === "extract" ? `<button type="button" class="btn btn-sm btn-ai" data-act="ai-mode" data-mode="improve">Fix it with AI</button>` : ""}<button type="button" class="btn btn-sm btn-ghost" data-act="dismiss">Dismiss</button></div></div>`;
+    <div class="row">${S.beforeAI ? `<button type="button" class="btn btn-sm" data-act="revert">${ICON.undo} ${r.mode === "extract" || r.mode === "check" ? "Restore my previous resume" : "Undo AI changes"}</button>` : ""}${["review", "check", "extract", "instant"].includes(r.mode) && aiAvailable() ? `<button type="button" class="btn btn-sm btn-ai" data-act="ai-mode" data-mode="improve">Fix it with AI</button>` : ""}<button type="button" class="btn btn-sm btn-ghost" data-act="dismiss">Dismiss</button></div></div>`;
 }
 function animateRing() {
   const ring = $("[data-ring]"); if (!ring) return;
@@ -792,7 +811,7 @@ function switchTab(tab) {
   $("#paneDesign").hidden = S.tab !== "design";
   $("#paneAI").hidden = S.tab !== "ai";
   if (S.tab === "design") renderDesign();
-  if (S.tab === "ai") { renderAIPane(); if (S.user) refreshUsage(); }
+  if (S.tab === "ai") { renderAIPane(); if (aiAvailable()) refreshUsage(); }
   $("#panel").scrollTop = 0;
 }
 $$("[data-tab]").forEach(b => b.addEventListener("click", () => switchTab(b.dataset.tab)));
@@ -865,7 +884,7 @@ async function boot() {
         }
       } catch (err) { toast(err.message || "Couldn't open the resume"); }
     }
-    if (S.user) refreshUsage();
+    if (aiAvailable()) refreshUsage();
   }
   const open = q.get("open");
   if (open && MODES[open]) setTimeout(() => openAIModal(open), 300);

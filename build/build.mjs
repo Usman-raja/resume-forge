@@ -17,6 +17,7 @@ if (fs.existsSync(envFile)) {
   }
 }
 
+if (process.argv.includes("--dev")) process.env.DEV_LOGIN = "1"; // local test login instead of Google
 const { default: SITE } = await import("../site.config.mjs");
 const P = await import("../src/pages/pages.mjs");
 const { TEMPLATES } = await import("../src/shared/templates.mjs");
@@ -70,7 +71,6 @@ write("/privacy/", P.privacyPage(), { priority: 0.2 });
 write("/terms/", P.termsPage(), { priority: 0.2 });
 write("/dashboard/", P.dashboardPage(), { sitemap: false });
 write("/login/", P.loginPage(), { sitemap: false });
-write("/auth/callback/", P.callbackPage(), { sitemap: false });
 write("/r/", P.sharePage(), { sitemap: false });
 write("/404", P.notFoundPage(), { sitemap: false });
 
@@ -80,7 +80,7 @@ fs.writeFileSync(path.join(DIST, "sitemap.xml"),
   pages.map(p => `  <url><loc>${SITE.url}${p.url}</loc><lastmod>${today}</lastmod><priority>${p.priority.toFixed(1)}</priority></url>`).join("\n") +
   `\n</urlset>\n`);
 fs.writeFileSync(path.join(DIST, "robots.txt"),
-  `User-agent: *\nAllow: /\nDisallow: /dashboard/\nDisallow: /login/\nDisallow: /auth/\nDisallow: /r/\nDisallow: /api/\n\nSitemap: ${SITE.url}/sitemap.xml\n`);
+  `User-agent: *\nAllow: /\nDisallow: /dashboard/\nDisallow: /login/\nDisallow: /r/\nDisallow: /api/\n\nSitemap: ${SITE.url}/sitemap.xml\n`);
 if (SITE.adsenseClient) {
   const pub = SITE.adsenseClient.replace(/^ca-/, "");
   fs.writeFileSync(path.join(DIST, "ads.txt"), `google.com, ${pub}, DIRECT, f08c47fec0942fa0\n`);
@@ -117,4 +117,4 @@ fs.writeFileSync(path.join(DIST, "_redirects"), `/resume-builder /builder/ 301
 
 console.log(`Built ${pages.length + 4} pages into dist/ (v=${V}) in ${Date.now() - t0} ms`);
 if (SITE.url.includes("example.com")) console.warn("⚠  SITE_URL is not set — set it to your real domain before launching (Cloudflare → Settings → Environment variables).");
-if (!SITE.supabaseUrl) console.warn("⚠  SUPABASE_URL is not set — login, cloud saving and AI limits are disabled.");
+if (!SITE.authEnabled) console.warn("⚠  GOOGLE_CLIENT_ID is not set — \"Continue with Google\" and cloud saving are hidden.");

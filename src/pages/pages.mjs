@@ -31,7 +31,7 @@ const scaled = (html, { max = 1, pad = 44 } = {}) => `<div class="scaled-page" d
 /* =========================== HOME =========================== */
 const FAQ = [
   ["Is Resume Forge really free?", `Yes. All ${N} templates, PDF and Word downloads and the AI tools are free. There is no watermark and no "pay to download" step. The site is supported by ads.`],
-  ["Do I need to sign up?", "No. You can build and download a resume without an account. Signing in with Google is only needed for the AI features and for saving several resumes online, so we can give everyone a fair daily AI allowance."],
+  ["Do I need to sign up?", "No. You can build and download a resume without an account, and even try the AI tools as a guest. Signing in with Google gives you more AI credits every day and saves your resumes online."],
   ["Can I upload my old CV?", "Yes. Upload a PDF, a Word (.docx) file, or even a photo of a printed CV. The AI reads it, fills every section and can rewrite it in a stronger, more professional style."],
   ["Will the AI make things up?", "No. It is instructed never to invent employers, dates, degrees or numbers. If a line would be stronger with a number you didn't give, it tells you which number to add instead."],
   ["Are the templates ATS-friendly?", "Yes. PDFs are made with real, selectable text that applicant tracking systems can read. Templates tagged ATS use a simple single-column layout that is safest for online job portals."],
@@ -262,7 +262,7 @@ export function atsPage() {
   <h1>Free ATS resume checker</h1>
   <p>Upload your CV and get an honest score out of 100, what's working, and exactly what to fix — the same things applicant tracking systems and recruiters look for. Add a job ad to see which keywords you match.</p>
   <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:22px"><a class="btn btn-ai btn-lg" href="/builder/?open=check">${I.gauge} Check my CV now</a><a class="btn btn-lg" href="/builder/?tab=ai">Check the resume I'm building</a></div>
-  <p class="note" style="margin-top:12px">Free. Sign in with Google to use AI tools — it takes one click.</p></div></section>
+  <p class="note" style="margin-top:12px">Free, no sign-up needed. The builder also has an instant check that works without AI and has no limit.</p></div></section>
 <section class="section" style="padding-top:20px"><div class="wrap">
   <div class="feat-grid">
     <div class="feat"><span class="ic ai">${I.gauge}</span><h3>Score out of 100</h3><p>Scored like a recruiter using ATS software: clarity, impact, keywords, structure and grammar.</p></div>
@@ -363,7 +363,7 @@ export function builderPage() {
   <main class="canvas" id="canvas" aria-label="Preview">
     <div class="canvas-tools">
       <div class="zoom"><button type="button" id="btnUndo" title="Undo (Ctrl+Z)" aria-label="Undo" disabled style="display:grid;place-items:center">${IC.undo}</button><button type="button" id="btnRedo" title="Redo" aria-label="Redo" disabled style="display:grid;place-items:center">${IC.redo}</button></div>
-      <div class="canvas-info"><span class="tplname" id="tplName"></span><span id="pageCount"></span></div>
+      <div class="canvas-info"><button type="button" class="score-chip" id="scoreChip" title="Instant check — free"><i></i><span>Score</span></button><span class="tplname" id="tplName"></span><span id="pageCount"></span></div>
       <div class="zoom"><button type="button" id="zoomOut" aria-label="Zoom out">−</button><span id="zoomVal">100%</span><button type="button" id="zoomIn" aria-label="Zoom in">+</button><button type="button" id="zoomFit" style="width:auto;padding:0 10px;font-size:12.5px;font-weight:600">Fit</button></div>
     </div>
     <div class="stage"><div class="page-holder" id="pageHolder"><div class="page-scale" id="pageScale"></div></div></div>
@@ -387,21 +387,15 @@ export function dashboardPage() {
 }
 
 export function loginPage() {
+  const G = `<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>`;
   const body = `<div class="auth-wrap"><div class="auth-card">
-  <div style="display:grid;gap:8px"><h1>Sign in — it's free</h1><p class="muted">Unlock AI writing tools and keep all your resumes safe in the cloud.</p></div>
-  <ul class="perks"><li>30 free AI credits every day</li><li>Save unlimited versions and open them anywhere</li><li>Share your resume with a link</li><li>No payment, ever</li></ul>
-  <button class="btn btn-google btn-lg btn-block" type="button" id="gBtn"><span style="width:20px;height:20px;display:inline-grid">${`<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>`}</span> Continue with Google</button>
-  <div class="or">or</div>
-  <form id="emailForm" style="display:grid;gap:10px"><label class="field"><span>Email</span><input type="email" id="email" required placeholder="you@example.com" autocomplete="email"></label><button class="btn btn-block" type="submit">Email me a sign-in link</button></form>
+  <div style="display:grid;gap:8px"><h1>Sign in — it's free</h1><p class="muted">Get more AI credits and keep all your resumes safe online.</p></div>
+  <ul class="perks"><li>${SITE.aiDailyCredits} free AI credits every day</li><li>Save many versions and open them on any device</li><li>Share your resume with a link</li><li>No payment, ever</li></ul>
+  <button class="btn btn-google btn-lg btn-block" type="button" id="gBtn"><span style="width:20px;height:20px;display:inline-grid">${G}</span> Continue with Google</button>
   <p class="notice" id="msg" hidden></p>
-  <p class="note">By continuing you agree to our <a href="/terms/">Terms</a> and <a href="/privacy/">Privacy policy</a>. We only read your name, email and profile picture.</p>
+  <p class="note">By continuing you agree to our <a href="/terms/">Terms</a> and <a href="/privacy/">Privacy policy</a>. We only receive your name, email address and profile picture from Google.</p>
 </div></div>`;
-  return page({ path: "/login/", title: "Sign in", description: "Sign in to save resumes and use free AI tools.", body, noindex: true, scripts: ["login.mjs"] });
-}
-
-export function callbackPage() {
-  const body = `<div class="auth-wrap"><div class="auth-card" style="text-align:center"><h1>Signing you in…</h1><p class="muted" id="msg">One moment.</p></div></div>`;
-  return page({ path: "/auth/callback/", title: "Signing in", description: "Signing in", body, noindex: true, scripts: ["callback.mjs"] });
+  return page({ path: "/login/", title: "Sign in", description: "Sign in to save resumes and get more free AI credits.", body, noindex: true, scripts: ["login.mjs"] });
 }
 
 export function sharePage() {
@@ -440,9 +434,9 @@ export function privacyPage() {
   <h2>1. Using the site without an account</h2>
   <p>The resume you create is saved only in your own browser (local storage). It is not sent to our servers unless you use an AI feature or sign in.</p>
   <h2>2. Accounts</h2>
-  <p>If you sign in with Google or email, we receive your name, email address and profile picture from the sign-in provider. Your resumes are stored in your private account in our database (provided by Supabase). Only you can read them unless you turn on a share link for a resume; anyone with that link can then view that resume until you turn sharing off.</p>
+  <p>If you choose "Continue with Google", Google sends us your name, email address and profile picture. We set a secure login cookie so you stay signed in. Your saved resumes are stored in your private account in our database (hosted by Cloudflare). Only you can see them unless you turn on a share link for a resume; anyone with that link can then view that resume until you turn sharing off.</p>
   <h2>3. AI features</h2>
-  <p>When you use an AI feature, the text of your resume (and any file text, page images or job description you provide) is sent to our AI provider to generate the result. Your photo is never sent. We do not use your content to train AI models, and our provider's API terms do not allow them to train on it. We keep a count of AI actions per account per day to enforce fair-use limits.</p>
+  <p>When you use an AI feature, the text of your resume (and any file text, page images or job description you provide) is processed by an open-source AI model running on Cloudflare's network (Cloudflare Workers AI) to produce the result. Your photo is never sent. We do not use your content to train AI models. Some small rewrites may run entirely on your own device using your browser's built-in AI, when your browser offers it. To keep AI fair and free, we count AI actions per account, or for guests per network address; for guests we store only a one-way scrambled code, not the address itself.</p>
   <h2>4. Uploaded files</h2>
   <p>Files you upload are read inside your browser. Only the extracted text (or page images for scanned files) is sent for AI processing. We do not store the original files.</p>
   <h2>5. Advertising and analytics</h2>

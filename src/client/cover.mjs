@@ -1,4 +1,4 @@
-import { $, esc, toast, openModal, ICON } from "./ui.mjs";
+import { $, esc, toast, openModal, ICON, CFG } from "./ui.mjs";
 import { authEnabled, getUser, signInWithGoogle } from "./auth.mjs";
 import * as store from "./store.mjs";
 import { callAI, aiMessage, aiNeedsLogin } from "./ai.mjs";
@@ -45,12 +45,15 @@ function resumeForAI() {
 }
 
 let current = null;
+function signInPrompt(reason) {
+  const m = openModal(`<h2>Sign in to write your letter — free</h2><p class="sub">${esc(reason || `One click with Google. You'll get ${CFG.aiDailyLimit || 15} free AI credits every day.`)}</p><button class="btn btn-google btn-lg btn-block" type="button" data-g>${ICON.google} Continue with Google</button>`);
+  m.el.querySelector("[data-g]").onclick = () => signInWithGoogle(location.pathname).catch(x => toast(x.message));
+}
 $("#clForm").onsubmit = async e => {
   e.preventDefault();
   const err = $("#clErr"); err.hidden = true;
   if (aiNeedsLogin() && !(await getUser())) {
-    const m = openModal(`<h2>Sign in to write your letter — free</h2><p class="sub">One click with Google. You'll get 30 free AI credits every day.</p><button class="btn btn-google btn-lg btn-block" type="button" data-g>${ICON.google} Continue with Google</button><a class="btn btn-ghost btn-block" href="/login/">Use email instead</a>`);
-    m.el.querySelector("[data-g]").onclick = () => signInWithGoogle(location.pathname).catch(x => toast(x.message));
+    signInPrompt();
     return;
   }
   let resume;
@@ -66,7 +69,10 @@ $("#clForm").onsubmit = async e => {
     ["#clCopy", "#clDocx", "#clTxt"].forEach(s => { $(s).disabled = false; });
     $("#clOut").scrollIntoView({ behavior: "smooth", block: "center" });
     toast("Your cover letter is ready — edit anything you like");
-  } catch (x) { err.textContent = x.message || aiMessage(x.code); err.hidden = false; }
+  } catch (x) {
+    if ((x.code === "guest_limit" || x.code === "auth") && authEnabled) signInPrompt(x.message);
+    err.textContent = x.message || aiMessage(x.code); err.hidden = false;
+  }
   finally { $("#clGo").disabled = false; $("#clProg").hidden = true; }
 };
 

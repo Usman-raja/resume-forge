@@ -13,8 +13,8 @@ export const logo = (cls = "") => `<a class="logo ${cls}" href="/" aria-label="$
 export function publicConfig() {
   return {
     siteName: SITE.name, siteUrl: SITE.url,
-    supabaseUrl: SITE.supabaseUrl, supabaseAnonKey: SITE.supabaseAnonKey,
-    aiEnabled: SITE.aiEnabled, aiRequireLogin: SITE.aiRequireLogin, aiDailyLimit: SITE.aiDailyCredits,
+    authEnabled: SITE.authEnabled, devLogin: SITE.devLogin,
+    aiEnabled: SITE.aiEnabled, aiRequireLogin: SITE.aiRequireLogin, aiDailyLimit: SITE.aiDailyCredits, aiGuestLimit: SITE.aiGuestCredits,
     adsenseClient: SITE.adsenseClient, adSlots: SITE.adSlots, showAdPlaceholders: SITE.showAdPlaceholders
   };
 }

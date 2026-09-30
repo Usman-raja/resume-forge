@@ -30,6 +30,10 @@ body.app-body{overflow:hidden;display:grid;grid-template-rows:auto 1fr;height:10
 .zoom span{font-size:12.5px;font-weight:600;min-width:48px;text-align:center;font-variant-numeric:tabular-nums}
 .canvas-info{font-size:12.5px;color:var(--muted);display:flex;gap:10px;align-items:center}
 .canvas-info .tplname{font-weight:700;color:var(--ink)}
+.score-chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:3px 10px 3px 4px;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--ink-2);box-shadow:var(--shadow-sm)}
+.score-chip i{min-width:26px;height:22px;border-radius:99px;display:grid;place-items:center;font-style:normal;font-weight:800;font-size:11.5px;color:#fff;background:var(--muted);padding:0 5px;font-variant-numeric:tabular-nums}
+.score-chip.good i{background:var(--good)}.score-chip.ok i{background:var(--warn)}.score-chip.low i{background:var(--bad)}
+.score-chip:hover{border-color:var(--accent)}
 .stage{display:flex;justify-content:center;padding:6px 24px 80px}
 .page-holder{position:relative;flex:none}
 .page-scale{position:absolute;left:0;top:0;transform-origin:0 0}
@@ -158,6 +162,13 @@ body.app-body{overflow:hidden;display:grid;grid-template-rows:auto 1fr;height:10
   .bar-actions .hide-m{display:none}
   .save-state .lbl{display:none}
   .stage{padding:4px 10px 40px}
-  .canvas-tools{padding:8px 10px}
+  .canvas-tools{padding:8px 10px;gap:6px}
+  .canvas-info{gap:6px;min-width:0}
+  .canvas-info .tplname,.score-chip span{display:none}
+  .app-bar #btnDownload span,.app-bar .avatar-btn .nm{display:none}
+  .app-bar .avatar-btn{padding:3px}
+  .app-bar .user-slot .btn{padding:8px 10px}
+  .app-bar .doc-title{flex:1 1 0;width:0;min-width:0}
+  .score-chip{padding:3px}
 }
-@media (max-width:420px){.tpl-pick{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:420px){.tpl-pick{grid-template-columns:repeat(2,1fr)}.app-bar .save-state{display:none}}

@@ -89,7 +89,7 @@ async function load() {
   if (!authEnabled) { box.innerHTML = `<div class="notice warn">Accounts aren't set up on this site yet. Your resume is saved in this browser — <a href="/builder/">open the builder</a>.</div>`; return; }
   const u = await getUser();
   if (!u) {
-    box.innerHTML = `<div class="auth-card" style="margin:10px auto 60px"><h2 style="font-size:24px">Sign in to see your resumes</h2><p class="muted">Keep every version of your resume safe and open it on any device.</p><button class="btn btn-google btn-lg btn-block" type="button" id="g">${ICON.google} Continue with Google</button><a class="btn btn-ghost btn-block" href="/login/">Use email instead</a></div>`;
+    box.innerHTML = `<div class="auth-card" style="margin:10px auto 60px"><h2 style="font-size:24px">Sign in to see your resumes</h2><p class="muted">Keep every version of your resume safe and open it on any device.</p><button class="btn btn-google btn-lg btn-block" type="button" id="g">${ICON.google} Continue with Google</button></div>`;
     $("#g").onclick = () => signInWithGoogle("/dashboard/").catch(err => toast(err.message));
     return;
   }
