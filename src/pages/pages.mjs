@@ -423,7 +423,7 @@ export function aboutPage() {
 export function contactPage() {
   return prosePage("/contact/", "Contact us", `Contact the ${SITE.name} team.`, `
   <p>We read every message. For help with your account, bug reports, feature ideas or partnerships, email us at:</p>
-  <p style="font-size:20px;font-weight:700;user-select:all">${esc(SITE.contactEmail)}</p>
+  <p style="font-size:20px;font-weight:700"><a href="mailto:${esc(SITE.contactEmail)}">${esc(SITE.contactEmail)}</a></p>
   <p>To delete your account and all saved resumes, email us from the address you signed in with and write "Delete my account" in the subject. We'll confirm within 7 days.</p>`);
 }
 export function privacyPage() {
@@ -444,11 +444,11 @@ export function privacyPage() {
   <h2>6. Sharing</h2>
   <p>We never sell your personal data. We share it only with the service providers that run the site (hosting, database, sign-in, AI processing, advertising and analytics) and when required by law.</p>
   <h2>7. Keeping and deleting data</h2>
-  <p>You can delete any resume from your dashboard at any time. To delete your account and all its data, contact us at ${esc(SITE.contactEmail)}.</p>
+  <p>You can delete any resume from your dashboard at any time. To delete your account and all its data, contact us at <a href="mailto:${esc(SITE.contactEmail)}">${esc(SITE.contactEmail)}</a>.</p>
   <h2>8. Children</h2>
   <p>The service is intended for people aged 16 and over.</p>
   <h2>9. Contact</h2>
-  <p>Questions about privacy: ${esc(SITE.contactEmail)}.</p>`);
+  <p>Questions about privacy: <a href="mailto:${esc(SITE.contactEmail)}">${esc(SITE.contactEmail)}</a>.</p>`);
 }
 export function termsPage() {
   const d = new Date().toISOString().slice(0, 10);
@@ -459,7 +459,7 @@ export function termsPage() {
   <h2>3. Fair use</h2><p>AI features have daily limits so they can stay free for everyone. Do not attempt to bypass limits, overload the service, scrape it, or use it to create misleading or unlawful content.</p>
   <h2>4. Accounts</h2><p>Keep your sign-in secure. We may suspend accounts that abuse the service.</p>
   <h2>5. No guarantee</h2><p>The service is provided "as is". We do not guarantee that using it will lead to a job or interview, and we are not liable for any loss arising from its use, to the extent permitted by law.</p>
-  <h2>6. Contact</h2><p>${esc(SITE.contactEmail)}</p>`);
+  <h2>6. Contact</h2><p><a href="mailto:${esc(SITE.contactEmail)}">${esc(SITE.contactEmail)}</a></p>`);
 }
 export function notFoundPage() {
   return page({
