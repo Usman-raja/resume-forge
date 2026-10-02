@@ -10,6 +10,7 @@
   "scripts": {
     "build": "node build/build.mjs",
     "dev": "node build/build.mjs && node build/dev-server.mjs",
-    "dev:mock": "node build/build.mjs --dev && node build/dev-server.mjs --mock --dev-login"
+    "dev:mock": "node build/build.mjs --dev && node build/dev-server.mjs --mock --dev-login",
+    "test": "node build/test.mjs"
   }
 }

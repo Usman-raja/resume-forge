@@ -14,6 +14,27 @@ Na koi npm package, na Supabase, na OpenAI/Claude key. Paid cheez sirf **domain*
 
 ---
 
+## Sab se aasaan tareeqa: Claude Code se launch
+
+Yeh repo **Claude Code** mein kholein aur likhein: **`/launch`**
+
+Claude khud yeh sab karega:
+- Tests chalayega
+- Database banayega
+- Deploy karega
+- Asli AI ko check karega
+- Aakhir mein aap ko live link dega
+
+Woh sirf do jagah aap se madad maangega:
+1. **Cloudflare token** aur network ki ijazat
+2. **Google login** ki do values
+
+Baad mein koi bhi tabdeeli karein to **`/deploy`** likhein.
+
+Neeche ke steps wohi kaam haath se karne ka tareeqa hain.
+
+---
+
 ## 0. AI kaise kaam karta hai
 
 - **Model:** Mistral Small 3.1 (24B). Yeh open-source hai (Apache 2.0 license, yani commercial istemal free). Yeh Cloudflare ke servers par chalta hai. Aap ko sirf project mein ek "AI binding" jorni hoti hai; koi key nahi.
