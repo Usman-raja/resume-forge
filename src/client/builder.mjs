@@ -122,12 +122,29 @@ async function saveToCloud() {
 
 /* ============================== commit ============================== */
 const renderPreviewSoon = debounce(() => renderPreview(), 60);
+// The document title follows "Name — Job title" until the user renames it.
+const autoTitle = d => has(d.name) ? d.name.trim() + (has(d.title) ? " — " + d.title.trim() : "") : "";
+const titleBase = new WeakMap(); // doc → the automatic title it had last time we looked
+function syncTitle({ force = false } = {}) {
+  const auto = autoTitle(S.doc.data), t = (S.doc.title || "").trim();
+  if (!titleBase.has(S.doc)) {
+    // An older automatic title ("Old Name — Job") left behind after the name changed counts as automatic too.
+    titleBase.set(S.doc, t.includes(" — ") ? t : auto);
+  }
+  if (auto && auto !== t && (force || !t || t === "My resume" || t === titleBase.get(S.doc))) {
+    S.doc.title = auto;
+    const el = $("#docTitle");
+    if (el && document.activeElement !== el) el.value = auto;
+  }
+  if (auto && S.doc.title.trim() === auto) titleBase.set(S.doc, auto);
+}
 const renderThumbsSoon = debounce(() => { if (S.tab === "design") renderTemplatePicker(); }, 700);
 function changed({ editor = false, preview = true, thumbs = true } = {}) {
   if (S.doc.isExample) { S.doc.isExample = false; if (!editor) renderEditorBanner(); }
   if (editor) renderEditor();
   if (preview) renderPreviewSoon();
   if (thumbs) renderThumbsSoon();
+  syncTitle();
   saveSoon();
 }
 
@@ -715,9 +732,10 @@ function applyResult(res, mode) {
     const next = normalizeResume(res.resume || {});
     if (!next.photo) next.photo = S.doc.isExample ? "" : photo;
     if (mode !== "basic" && !next.experience.length && !next.education.length && !has(next.name)) throw { code: "server", message: "The AI couldn't find resume content in this file. Try another file or paste the text." };
+    const otherPerson = has(next.name) && next.name.trim().toLowerCase() !== String(S.doc.data.name || "").trim().toLowerCase();
     S.doc.data = next;
     S.doc.isExample = false;
-    if (has(next.name) && (S.doc.title === "My resume" || !has(S.doc.title))) S.doc.title = next.name + (next.title ? " — " + next.title : "");
+    syncTitle({ force: otherPerson }); // a CV of a different person gets its own title
     S.review = mode === "basic" ? null : { mode, scoreBefore: mode === "improve" || mode === "tailor" ? (+res.scoreBefore || 0) : 0, score: +res.scoreAfter || +res.scoreBefore || 0, verdict: res.verdict || "", strengths: arr(res.strengths), issues: arr(res.issues), changes: arr(res.changes), tips: arr(res.tips), kwHit: arr(res.keywords?.matched), kwMiss: arr(res.keywords?.missing), animate: true };
   }
   S.open.add("personal"); S.open.add("experience");
@@ -830,6 +848,7 @@ $$("[data-tab]").forEach(b => b.addEventListener("click", () => switchTab(b.data
 
 /* ============================== render all ============================== */
 function renderAll() {
+  if (!S.doc.isExample) syncTitle();
   $("#docTitle").value = S.doc.title;
   renderEditor();
   if (S.tab === "design") renderDesign();
@@ -855,7 +874,7 @@ async function boot() {
     let use = true;
     S.doc = localDoc || newDoc({ data: EXAMPLE, isExample: true });
     if (localHasWork) { renderShell(); use = await chooseReplace("Replace your current draft with this example?"); }
-    if (use) S.doc = newDoc({ data: ex.data, settings: { template: ex.template }, title: ex.title + " resume" });
+    if (use) { S.doc = newDoc({ data: ex.data, settings: { template: ex.template }, title: ex.title + " resume" }); titleBase.set(S.doc, S.doc.title); }
   } else if (q.get("new")) {
     let use = true;
     S.doc = localDoc || newDoc({ data: EXAMPLE, isExample: true });

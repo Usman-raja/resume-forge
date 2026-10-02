@@ -294,11 +294,11 @@ export function coverLetterPage() {
 <section class="page-hero" style="padding-bottom:20px"><div class="wrap"><div class="crumbs"><a href="/">Home</a> / Cover letter generator</div>
   <h1>Free AI cover letter generator</h1>
   <p>Write a personal, specific cover letter in about 30 seconds. It uses the facts from your resume and matches them to what the job ad asks for.</p></div></section>
-<div class="wrap"><div class="detail" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)">
+<div class="wrap"><div class="detail detail-even">
   <form id="clForm" class="auth-card" style="width:100%;box-shadow:none" autocomplete="off">
     <div class="field"><span>Your resume</span><select id="clResume"><option value="local">The resume in this browser</option></select><small class="note" id="clResumeNote"></small></div>
     <label class="field"><span>Job ad</span><textarea id="clJD" rows="7" placeholder="Paste the job description here" required></textarea></label>
-    <div class="grid2"><label class="field"><span>Company <em>(optional)</em></span><input id="clCompany" placeholder="e.g. Engro"></label><label class="field"><span>Hiring manager <em>(optional)</em></span><input id="clManager" placeholder="e.g. Ms. Ayesha Khan"></label></div>
+    <div class="grid2"><label class="field"><span>Company <em>(optional)</em></span><input id="clCompany" placeholder="e.g. Engro"></label><label class="field"><span>Hiring manager <em>(optional)</em></span><input id="clManager" placeholder="e.g. Ms. Sarah Mitchell"></label></div>
     <div class="grid2"><label class="field"><span>Tone</span><select id="clTone"><option value="professional and warm">Professional &amp; warm</option><option value="confident and direct">Confident &amp; direct</option><option value="formal">Formal</option><option value="enthusiastic">Enthusiastic</option></select></label>
     <label class="field"><span>Length</span><select id="clLen"><option value="medium">Medium (~300 words)</option><option value="short">Short (~200 words)</option><option value="long">Long (~400 words)</option></select></label></div>
     <div class="progress" id="clProg" hidden><b>Writing your cover letter…</b><div class="bar"><i></i></div></div>
@@ -306,7 +306,7 @@ export function coverLetterPage() {
     <button class="btn btn-ai btn-lg" type="submit" id="clGo">${I.sparkle} Write my cover letter</button>
   </form>
   <div class="auth-card" style="width:100%;box-shadow:none;align-content:start">
-    <div class="pane-h" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b>Your cover letter</b><div style="display:flex;gap:6px"><button class="btn btn-sm" type="button" id="clCopy" disabled>Copy</button><button class="btn btn-sm" type="button" id="clDocx" disabled>Word</button><button class="btn btn-sm" type="button" id="clTxt" disabled>.txt</button></div></div>
+    <div class="pane-h" style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b>Your cover letter</b><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-sm" type="button" id="clCopy" disabled>Copy</button><button class="btn btn-sm" type="button" id="clDocx" disabled>Word</button><button class="btn btn-sm" type="button" id="clTxt" disabled>.txt</button></div></div>
     <label class="field"><span>Email subject</span><input id="clSubject" placeholder="Appears here"></label>
     <textarea id="clOut" class="input" rows="18" placeholder="Your letter will appear here. You can edit it before copying." style="line-height:1.6"></textarea>
   </div>
