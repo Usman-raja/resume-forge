@@ -104,6 +104,7 @@ p{margin:0}
 .dropdown-menu a,.dropdown-menu button{display:flex;align-items:center;gap:10px;text-align:left;border:0;background:transparent;border-radius:8px;padding:9px 11px;cursor:pointer;text-decoration:none;color:var(--ink);font-size:14px;width:100%}
 .dropdown-menu a:hover,.dropdown-menu button:hover{background:var(--surface-2)}
 .dropdown-menu small{display:block;color:var(--muted);font-size:12px}
+.dropdown-menu svg{width:18px;height:18px;flex:none}
 .dropdown-menu hr{border:0;border-top:1px solid var(--line);margin:4px 2px}
 .dropdown-menu .who{padding:8px 11px 6px;font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mobile-nav{display:none}

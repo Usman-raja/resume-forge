@@ -37,5 +37,5 @@ export default {
   // Google Analytics 4 measurement ID, e.g. G-XXXXXXX (optional)
   gaId: env.GA_ID || "",
   // Google Search Console verification code (optional, the content="" value)
-  googleVerification: env.GOOGLE_SITE_VERIFICATION || ""
+  googleVerification: env.GOOGLE_SITE_VERIFICATION || "Ql7EGyCo8CXBdTALQ8avA20EBb8oLIR-Dvee204LQ2c"
 };
