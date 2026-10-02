@@ -108,7 +108,7 @@ fs.writeFileSync(path.join(DIST, "_headers"), `/*
   Cache-Control: public, max-age=86400
 
 /js/*
-  Cache-Control: public, max-age=3600
+  Cache-Control: no-cache
 `);
 fs.writeFileSync(path.join(DIST, "_redirects"), `/resume-builder /builder/ 301
 /cv-maker /builder/ 301

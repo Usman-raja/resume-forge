@@ -14,6 +14,7 @@ console.log("1. Build");
 execFileSync(process.execPath, [path.join(ROOT, "build/build.mjs")], { stdio: "pipe", env: { ...process.env, GOOGLE_CLIENT_ID: "test.apps.googleusercontent.com" } });
 const D = p => fs.existsSync(path.join(ROOT, "dist", p));
 ok(D("index.html") && D("builder/index.html") && D("templates/modern/index.html") && D("cv-examples/nurse/index.html"), "key pages built");
+ok(/\/js\/\*\n\s+Cache-Control: no-cache/.test(fs.readFileSync(path.join(ROOT, "dist/_headers"), "utf8")), "JS files revalidate (fixes reach users at once)");
 ok(fs.readFileSync(path.join(ROOT, "dist/sitemap.xml"), "utf8").split("<url>").length - 1 >= 45, "sitemap has 45+ pages");
 
 console.log("2. Resume engine");
