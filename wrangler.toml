@@ -15,4 +15,4 @@ database_id = "cbb371c2-351f-48b3-b5ff-eb90d6ac848c"
 AI_DAILY_CREDITS = "15"
 AI_GUEST_DAILY_CREDITS = "6"
 AI_GLOBAL_DAILY_CREDITS = "100"
-# GOOGLE_CLIENT_ID = "....apps.googleusercontent.com"   (added in step 8 of /launch)
+GOOGLE_CLIENT_ID = "465229273408-4v81u6e4m8oqgb46eimm1l5chrncn2co.apps.googleusercontent.com"
