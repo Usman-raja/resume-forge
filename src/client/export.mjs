@@ -1,4 +1,4 @@
-// Downloads: PDF (browser print engine → real selectable text), Word, text, JSON.
+// Downloads: Word, text, JSON, and the print-window PDF (fallback; the direct PDF is in pdf.mjs).
 import { loadScript } from "./ui.mjs";
 import { getTemplate } from "/js/shared/templates.mjs";
 import { SECTION_LABELS, resumeToText } from "/js/shared/schema.mjs";

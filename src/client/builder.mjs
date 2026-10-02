@@ -4,7 +4,7 @@ import { authEnabled, getUser, onAuthChange, goSignIn, signInWithGoogle } from "
 import * as store from "./store.mjs";
 import { callAI, aiMessage, onUsage, refreshUsage, aiNeedsLogin, aiAvailable } from "./ai.mjs";
 import { readResumeFile, photoToDataUrl, basicParse } from "./importer.mjs";
-import { printResume, exportDocx, exportText, exportJson, fileBase } from "./export.mjs";
+import { printResume, exportDocx, exportText, exportJson, fileBase, downloadBlob } from "./export.mjs";
 import { adSlotHTML, pushAds } from "./common.mjs";
 import { renderResume, effectiveOrder } from "/js/shared/render.mjs";
 import { TEMPLATES, TAG_LABELS, FONTS, ACCENTS, getTemplate } from "/js/shared/templates.mjs";
@@ -508,8 +508,11 @@ function needGate() {
   if (aiNeedsLogin() && !S.user) { openSignInModal(); return true; }
   return false;
 }
-function openSignInModal(reason = "Use AI for free", note = "") {
-  const next = `/builder/${S.doc.id ? "?id=" + S.doc.id : ""}`;
+function openSignInModal(reason = "Use AI for free", note = "", open = "") {
+  const qs = new URLSearchParams();
+  if (S.doc.id) qs.set("id", S.doc.id);
+  if (open) qs.set("open", open);
+  const next = "/builder/" + (qs.toString() ? "?" + qs : "");
   if (!authEnabled) { toast(reason); return; }
   const m = openModal(`<h2>${esc(reason)}</h2><p class="sub">${note ? esc(note) + " " : ""}Sign in once and get ${esc(CFG.aiDailyLimit || 15)} free AI credits every day, plus cloud saving for all your resumes.</p>
     <ul class="perks"><li>Your current resume is kept — nothing is lost</li><li>No credit card, no payment, ever</li><li>We never post anything to your Google account</li></ul>
@@ -755,13 +758,22 @@ document.addEventListener("click", e => { if (!e.target.closest("#dlWrap")) { dl
 dlMenu.addEventListener("click", async e => {
   const b = e.target.closest("[data-dl]"); if (!b) return;
   dlMenu.hidden = true;
+  // Downloads need a (free) account; after Google sign-in the user lands back here with this menu open.
+  if (authEnabled && !(S.user || await getUser())) return openSignInModal("Sign in to download your resume", "It's free and takes a few seconds.", "download");
   const base = fileBase(S.doc.data);
   try {
     if (b.dataset.dl === "pdf") {
-      if (!localStorage.getItem("rf:pdf-tip")) {
-        const ok = await pdfTip(); if (!ok) return;
+      const html = renderResume(S.doc.data, S.doc.settings);
+      try {
+        toast("Creating your PDF…");
+        const { buildPdf } = await import("./pdf.mjs");
+        downloadBlob(await buildPdf(html, { paper: S.doc.settings.paper, title: base }), base + ".pdf");
+      } catch (err) {
+        // Some browsers can't draw the page to a picture: fall back to the print window.
+        console.error(err);
+        if (!localStorage.getItem("rf:pdf-tip")) { const ok = await pdfTip(); if (!ok) return; }
+        await printResume(html, { paper: S.doc.settings.paper, title: base });
       }
-      await printResume(renderResume(S.doc.data, S.doc.settings), { paper: S.doc.settings.paper, title: base });
     }
     if (b.dataset.dl === "docx") { toast("Creating your Word file…"); await exportDocx(S.doc.data, S.doc.settings, base + ".docx"); }
     if (b.dataset.dl === "txt") exportText(S.doc.data, base + ".txt");
@@ -888,6 +900,7 @@ async function boot() {
   }
   const open = q.get("open");
   if (open && MODES[open]) setTimeout(() => openAIModal(open), 300);
+  if (open === "download" && S.user) setTimeout(() => { dlMenu.hidden = false; dlBtn.setAttribute("aria-expanded", "true"); }, 300);
   // clean one-off params from the address bar
   const u = new URL(location.href);
   ["example", "new", "template", "open", "tab"].forEach(k => u.searchParams.delete(k));
