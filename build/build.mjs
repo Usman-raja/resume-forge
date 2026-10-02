@@ -49,11 +49,22 @@ for (const dir of ["css", "js", "js/shared"]) {
 }
 const V = hash.digest("hex").slice(0, 10);
 
+// Stamp every module URL with ?v=V so a new deploy always loads fresh code.
+// All imports of a file must carry the same stamp, or the browser loads it twice.
+const stampJs = code => code.replace(/(\bfrom\s*|\bimport\s*\(\s*)(["'])((?:\.{1,2}\/|\/js\/)[^"'?]+\.mjs)\2/g, `$1$2$3?v=${V}$2`);
+const stampHtml = html => html.replace(/(["'])(\/js\/[^"'?]+\.mjs)\1/g, `$1$2?v=${V}$1`);
+for (const dir of ["js", "js/shared"]) {
+  for (const f of fs.readdirSync(path.join(DIST, dir))) {
+    const p = path.join(DIST, dir, f);
+    if (f.endsWith(".mjs")) fs.writeFileSync(p, stampJs(fs.readFileSync(p, "utf8")));
+  }
+}
+
 const pages = [];
 function write(urlPath, html, { sitemap = true, priority = 0.6 } = {}) {
   const file = urlPath === "/404" ? path.join(DIST, "404.html") : path.join(DIST, urlPath, "index.html");
   fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, html.replaceAll("__V__", V));
+  fs.writeFileSync(file, stampHtml(html.replaceAll("__V__", V)));
   if (sitemap) pages.push({ url: urlPath, priority });
 }
 
