@@ -3,16 +3,27 @@
 
 const MAX_IMG_SIDE = 1400;
 
+// Errors meant for the user; anything else thrown while parsing gets a plain message.
+class FileError extends Error {}
+
 export async function readResumeFile(file) {
+  try { return await readFile(file); }
+  catch (e) {
+    if (e instanceof FileError) throw e;
+    console.error(e);
+    throw new Error("We couldn't read this file. Save it again as PDF or Word (.docx) and upload it, or paste the text instead.");
+  }
+}
+async function readFile(file) {
   const name = (file.name || "").toLowerCase();
   const type = file.type || "";
   if (name.endsWith(".json")) return { kind: "json", json: JSON.parse(await file.text()) };
   if (name.endsWith(".pdf") || type === "application/pdf") return readPdf(file);
   if (name.endsWith(".docx")) return { kind: "docx", text: await readDocx(file), images: [] };
-  if (name.endsWith(".doc")) throw new Error("Old .doc files can't be read. Open it in Word and save as .docx or PDF, then upload again.");
+  if (name.endsWith(".doc")) throw new FileError("Old .doc files can't be read. Open it in Word and save as .docx or PDF, then upload again.");
   if (/\.(png|jpe?g|webp)$/.test(name) || type.startsWith("image/")) return { kind: "image", text: "", images: [await imageToJpeg(file)] };
   if (/\.(txt|md|rtf)$/.test(name) || type.startsWith("text/")) return { kind: "text", text: await file.text(), images: [] };
-  throw new Error("This file type isn't supported. Upload a PDF, Word (.docx), photo, or .txt file.");
+  throw new FileError("This file type isn't supported. Upload a PDF, Word (.docx), photo, or .txt file.");
 }
 
 /* ---------------- PDF ---------------- */
@@ -61,47 +72,92 @@ async function readPdf(file) {
 
 /* ---------------- DOCX (zip + XML, no library) ---------------- */
 async function inflateRaw(bytes) {
-  if (typeof DecompressionStream === "undefined") throw new Error("Your browser is too old to read Word files. Update Chrome, or upload a PDF instead.");
+  if (typeof DecompressionStream === "undefined") throw new FileError("Your browser is too old to read Word files. Update Chrome, or upload a PDF instead.");
   const ds = new DecompressionStream("deflate-raw");
   const stream = new Blob([bytes]).stream().pipeThrough(ds);
   return new Uint8Array(await new Response(stream).arrayBuffer());
 }
+const DAMAGED = "This .docx file looks damaged. Open it in Word and save it again (or save as PDF), then upload again.";
 async function unzipEntry(buf, wanted) {
+  const size = buf.byteLength;
   const dv = new DataView(buf);
   const u8 = new Uint8Array(buf);
-  // End of central directory record
+  const dec = new TextDecoder();
+  // Bounds-checked readers: a damaged file must never read past its end.
+  const fits = (at, len) => at >= 0 && at + len <= size;
+  const u16 = at => fits(at, 2) ? dv.getUint16(at, true) : -1;
+  const u32 = at => fits(at, 4) ? dv.getUint32(at, true) : -1;
+  const u64 = at => fits(at, 8) ? dv.getUint32(at, true) + dv.getUint32(at + 4, true) * 2 ** 32 : -1;
+  const readLocal = async (local, method, csize) => {
+    if (u32(local) !== 0x04034b50) return null;
+    const start = local + 30 + u16(local + 26) + u16(local + 28);
+    if (!fits(start, csize)) return null;
+    const data = u8.subarray(start, start + csize);
+    if (method === 0) return dec.decode(data);
+    if (method === 8) return dec.decode(await inflateRaw(data));
+    throw new FileError("This .docx uses a compression we can't read. Save it again in Word, or upload a PDF.");
+  };
+
+  // 1) Central directory (normal or ZIP64), allowing extra bytes before the zip.
   let eocd = -1;
-  for (let i = buf.byteLength - 22; i >= Math.max(0, buf.byteLength - 66000); i--) {
+  for (let i = size - 22; i >= Math.max(0, size - 66000); i--) {
     if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
   }
-  if (eocd < 0) throw new Error("This .docx file looks damaged.");
-  const count = dv.getUint16(eocd + 10, true);
-  let p = dv.getUint32(eocd + 16, true);
-  const dec = new TextDecoder();
-  for (let n = 0; n < count; n++) {
-    if (dv.getUint32(p, true) !== 0x02014b50) break;
-    const method = dv.getUint16(p + 10, true);
-    const csize = dv.getUint32(p + 20, true);
-    const nameLen = dv.getUint16(p + 28, true), extraLen = dv.getUint16(p + 30, true), cmtLen = dv.getUint16(p + 32, true);
-    const local = dv.getUint32(p + 42, true);
-    const name = dec.decode(u8.subarray(p + 46, p + 46 + nameLen));
-    if (name === wanted) {
-      const lNameLen = dv.getUint16(local + 26, true), lExtraLen = dv.getUint16(local + 28, true);
-      const start = local + 30 + lNameLen + lExtraLen;
-      const data = u8.subarray(start, start + csize);
-      if (method === 0) return dec.decode(data);
-      if (method === 8) return dec.decode(await inflateRaw(data));
-      throw new Error("Unsupported compression in .docx");
+  if (eocd >= 0) {
+    let count = u16(eocd + 10), cdSize = u32(eocd + 12), cdOff = u32(eocd + 16), cdEnd = eocd;
+    if ((count === 0xFFFF || cdSize === 0xFFFFFFFF || cdOff === 0xFFFFFFFF) && u32(eocd - 20) === 0x07064b50) {
+      const z = u64(eocd - 12);
+      if (u32(z) === 0x06064b50) { count = u64(z + 32); cdSize = u64(z + 40); cdOff = u64(z + 48); cdEnd = z; }
     }
-    p += 46 + nameLen + extraLen + cmtLen;
+    const shift = cdEnd - cdSize - cdOff;
+    const base = shift > 0 && u32(cdOff) !== 0x02014b50 && u32(cdOff + shift) === 0x02014b50 ? shift : 0;
+    let p = cdOff + base;
+    for (let n = 0; n < count && u32(p) === 0x02014b50; n++) {
+      const method = u16(p + 10);
+      let csize = u32(p + 20), usize = u32(p + 24), local = u32(p + 42);
+      const nameLen = u16(p + 28), extraLen = u16(p + 30), cmtLen = u16(p + 32);
+      if (!fits(p + 46, nameLen + extraLen)) break;
+      if (dec.decode(u8.subarray(p + 46, p + 46 + nameLen)) === wanted) {
+        // ZIP64 extra field holds the real sizes/offset when the 32-bit ones are maxed out.
+        for (let x = p + 46 + nameLen, xEnd = x + extraLen; x + 4 <= xEnd; x += 4 + u16(x + 2)) {
+          if (u16(x) !== 0x0001) continue;
+          let q = x + 4;
+          if (usize === 0xFFFFFFFF) { usize = u64(q); q += 8; }
+          if (csize === 0xFFFFFFFF) { csize = u64(q); q += 8; }
+          if (local === 0xFFFFFFFF) local = u64(q);
+          break;
+        }
+        const out = await readLocal(local + base, method, csize);
+        if (out != null) return out;
+        break;
+      }
+      p += 46 + nameLen + extraLen + cmtLen;
+    }
   }
+
+  // 2) Fallback: scan the local file headers (works when the index at the end is damaged).
+  const want = new TextEncoder().encode(wanted);
+  for (let i = 0; i + 30 <= size; i++) {
+    if (u32(i) !== 0x04034b50 || u16(i + 26) !== want.length) continue;
+    if (!want.every((b, k) => u8[i + 30 + k] === b)) continue;
+    const start = i + 30 + want.length + u16(i + 28);
+    let csize = u32(i + 18);
+    if ((u16(i + 6) & 8) || !fits(start, csize)) {
+      // Size isn't in the header: the data runs until the next zip record.
+      let end = start;
+      while (end + 4 <= size && !(u8[end] === 0x50 && u8[end + 1] === 0x4b && [0x0807, 0x0403, 0x0201].includes(u16(end + 2)))) end++;
+      csize = (end + 4 <= size ? end : size) - start;
+    }
+    return readLocal(i, u16(i + 8), csize);
+  }
+  if (eocd < 0) throw new FileError(DAMAGED);
   return null;
 }
 const decodeXml = s => s.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&#(\d+);/g, (_, d) => String.fromCharCode(+d)).replace(/&amp;/g, "&");
 export async function readDocx(file) {
   const buf = await file.arrayBuffer();
   const xml = await unzipEntry(buf, "word/document.xml");
-  if (!xml) throw new Error("This doesn't look like a Word .docx file.");
+  if (!xml) throw new FileError("This doesn't look like a Word .docx file.");
   const paras = xml.split(/<\/w:p>/);
   const lines = paras.map(p => {
     let out = "";
@@ -125,7 +181,7 @@ function canvasToPart(cv) {
 }
 export async function imageToJpeg(file, max = MAX_IMG_SIDE) {
   const bmp = await createImageBitmap(file).catch(() => null);
-  if (!bmp) throw new Error("This image couldn't be opened. Try a JPG or PNG.");
+  if (!bmp) throw new FileError("This image couldn't be opened. Try a JPG or PNG.");
   const s = Math.min(1, max / Math.max(bmp.width, bmp.height));
   const cv = document.createElement("canvas");
   cv.width = Math.round(bmp.width * s); cv.height = Math.round(bmp.height * s);
@@ -138,7 +194,7 @@ export async function imageToJpeg(file, max = MAX_IMG_SIDE) {
 // Square-crops and shrinks a profile photo to a small data URL for the resume.
 export async function photoToDataUrl(file, size = 360) {
   const bmp = await createImageBitmap(file).catch(() => null);
-  if (!bmp) throw new Error("This image couldn't be opened. Try a JPG or PNG.");
+  if (!bmp) throw new FileError("This image couldn't be opened. Try a JPG or PNG.");
   const side = Math.min(bmp.width, bmp.height);
   const sx = (bmp.width - side) / 2, sy = Math.max(0, (bmp.height - side) / 2 - side * 0.08);
   const cv = document.createElement("canvas");
