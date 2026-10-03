@@ -172,3 +172,33 @@ No watermark. No payment.
 - Pehle **1–2 ghante** comments ka jawab dein. Is se post zyada logon tak jati hai.
 - LinkedIn par link wali post kam dikhti hai. Agar reach kam ho, to post se link hata kar **pehle comment** mein link daal dein.
 - Ek hi din har jagah post na karein. 2–3 din ka faasla rakhein aur har dafa alag picture lagayein.
+
+---
+
+## WhatsApp — English versions
+
+### WhatsApp post (English)
+**Picture:** `4-whatsapp-post-en.png`
+
+```
+Hi everyone 👋
+
+If you or someone you know is looking for a job, check out this website. I built it myself, and it's completely FREE.
+
+Upload your old CV and AI turns it into a professional one. Then pick a design from 26 templates and download it as PDF or Word. No watermark, no payment.
+
+👉 https://resume-forge-80s.pages.dev
+
+Please share it. It might help someone 🙏
+```
+
+### WhatsApp Status
+**Roman Urdu** (`5-whatsapp-status.png`):
+```
+CV banani hai? AI se 2 minute mein professional CV banayein, bilkul free 👉 https://resume-forge-80s.pages.dev
+```
+
+**English** (`5-whatsapp-status-en.png`):
+```
+Need a CV? Make a professional one with AI in 2 minutes, completely free 👉 https://resume-forge-80s.pages.dev
+```
