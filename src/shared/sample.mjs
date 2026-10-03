@@ -7,17 +7,17 @@ export const AVATAR = "data:image/svg+xml;utf8," + encodeURIComponent(
 );
 
 export const EXAMPLE = {
-  name: "Ayesha Siddiqui",
+  name: "Emily Carter",
   title: "Frontend Developer",
-  email: "ayesha.siddiqui@example.com",
-  phone: "+92 300 1234567",
-  location: "Karachi, Pakistan",
-  links: ["linkedin.com/in/ayesha-example", "github.com/ayesha-example"],
+  email: "emily.carter@example.com",
+  phone: "+44 7700 90****",
+  location: "London, United Kingdom",
+  links: ["linkedin.com/in/emily-carter-example", "github.com/emily-carter-example"],
   photo: AVATAR,
   summary: "Frontend developer with 4 years of experience building fast, accessible web apps in React and TypeScript. Led the rebuild of a checkout flow used by 200k+ monthly shoppers and mentor two junior developers. Comfortable owning features end to end, from design review to release.",
   experience: [
     {
-      role: "Frontend Developer", company: "Bazaar Digital (example)", location: "Karachi", start: "Mar 2023", end: "Present",
+      role: "Frontend Developer", company: "Brightline Digital (example)", location: "London", start: "Mar 2023", end: "Present",
       bullets: [
         "Rebuilt the checkout flow in React and TypeScript, cutting page load time by 38% on mid-range Android phones",
         "Introduced a shared component library now used by 5 product teams, removing 12k lines of duplicate code",
@@ -25,7 +25,7 @@ export const EXAMPLE = {
       ]
     },
     {
-      role: "Junior Web Developer", company: "Northwind Systems (example)", location: "Lahore", start: "Jul 2021", end: "Feb 2023",
+      role: "Junior Web Developer", company: "Northwind Systems (example)", location: "Manchester", start: "Jul 2021", end: "Feb 2023",
       bullets: [
         "Built reporting dashboards for three banking clients using Angular and REST APIs",
         "Fixed 120+ accessibility issues to meet WCAG 2.1 AA ahead of a client audit"
@@ -33,14 +33,14 @@ export const EXAMPLE = {
     }
   ],
   education: [
-    { degree: "BS Computer Science", school: "FAST-NUCES", location: "Karachi", start: "2017", end: "2021", details: "CGPA 3.4 / 4.0 · Final year project: offline-first Urdu note-taking app" }
+    { degree: "BSc Computer Science", school: "University of Manchester", location: "Manchester", start: "2017", end: "2021", details: "First-Class Honours · Final year project: offline-first note-taking app" }
   ],
   projects: [
-    { name: "Shaadi Budget Planner", link: "github.com/ayesha-example/budget", desc: "Open-source wedding budget planner in Urdu and English, 3k+ downloads." }
+    { name: "Budget Buddy", link: "github.com/emily-carter-example/budget", desc: "Open-source household budget planner for web and mobile, 3k+ downloads." }
   ],
   skills: ["React", "TypeScript", "JavaScript", "Next.js", "Tailwind CSS", "REST APIs", "Jest", "Git", "Figma"],
   certifications: ["Meta Front-End Developer Certificate (2022)"],
-  languages: ["English — fluent", "Urdu — native"],
+  languages: ["English — native", "French — conversational"],
   details: [],
   custom: []
 };

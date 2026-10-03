@@ -14,6 +14,9 @@ console.log("1. Build");
 execFileSync(process.execPath, [path.join(ROOT, "build/build.mjs")], { stdio: "pipe", env: { ...process.env, GOOGLE_CLIENT_ID: "test.apps.googleusercontent.com" } });
 const D = p => fs.existsSync(path.join(ROOT, "dist", p));
 ok(D("index.html") && D("builder/index.html") && D("templates/modern/index.html") && D("cv-examples/nurse/index.html"), "key pages built");
+const R = p => fs.readFileSync(path.join(ROOT, "dist", p), "utf8");
+ok(R("builder/index.html").includes("/js/builder.mjs?v=") && /importer\.mjs\?v=/.test(R("js/builder.mjs")) && !/from\s*"[^"]+\.mjs"/.test(R("js/builder.mjs")), "JS imports carry a version stamp");
+ok(/\/js\/\*\n\s+Cache-Control: no-cache/.test(fs.readFileSync(path.join(ROOT, "dist/_headers"), "utf8")), "JS files revalidate (fixes reach users at once)");
 ok(fs.readFileSync(path.join(ROOT, "dist/sitemap.xml"), "utf8").split("<url>").length - 1 >= 45, "sitemap has 45+ pages");
 
 console.log("2. Resume engine");
@@ -24,6 +27,30 @@ const { lintResume } = await import("../src/shared/lint.mjs");
 ok(TEMPLATES.length >= 26 && TEMPLATES.every(t => renderResume(EXAMPLE, { template: t.id }).includes("t-" + t.id)), `${TEMPLATES.length} templates render`);
 ok(!/<script>/.test(renderResume({ name: "<script>x</script>" }, {})), "user text is escaped");
 ok(lintResume(EXAMPLE).score >= 80 && lintResume({ name: "A" }).score < 40, "instant check scores sensibly");
+
+// Word (.docx) reader: ZIP64, junk in front and a damaged index must not crash it.
+const { readDocx } = await import("../src/client/importer.mjs");
+const zip = ({ zip64 = false, prefix = 0, badOffset = false } = {}) => {
+  const name = Buffer.from("word/document.xml"), data = Buffer.from("<w:p><w:r><w:t>Sara Ahmed</w:t></w:r></w:p>");
+  const lh = Buffer.alloc(30); lh.writeUInt32LE(0x04034b50); lh.writeUInt16LE(name.length, 26);
+  lh.writeUInt32LE(data.length, 18); lh.writeUInt32LE(data.length, 22);
+  const body = Buffer.concat([Buffer.alloc(prefix), lh, name, data]);
+  const cd = Buffer.alloc(46); cd.writeUInt32LE(0x02014b50); cd.writeUInt32LE(data.length, 20); cd.writeUInt32LE(data.length, 24);
+  cd.writeUInt16LE(name.length, 28); cd.writeUInt32LE(badOffset ? 0x7ffffff0 : 0, 42);
+  const cdOff = prefix ? 0 : body.length, cdLen = cd.length + name.length;
+  const end = Buffer.alloc(22); end.writeUInt32LE(0x06054b50);
+  let z64 = Buffer.alloc(0);
+  if (zip64) {
+    const rec = Buffer.alloc(56); rec.writeUInt32LE(0x06064b50); rec.writeBigUInt64LE(44n, 4);
+    rec.writeBigUInt64LE(1n, 24); rec.writeBigUInt64LE(1n, 32); rec.writeBigUInt64LE(BigInt(cdLen), 40); rec.writeBigUInt64LE(BigInt(cdOff), 48);
+    const loc = Buffer.alloc(20); loc.writeUInt32LE(0x07064b50); loc.writeBigUInt64LE(BigInt(body.length + cdLen), 8);
+    z64 = Buffer.concat([rec, loc]);
+    end.writeUInt16LE(0xffff, 8); end.writeUInt16LE(0xffff, 10); end.writeUInt32LE(0xffffffff, 12); end.writeUInt32LE(0xffffffff, 16);
+  } else { end.writeUInt16LE(1, 8); end.writeUInt16LE(1, 10); end.writeUInt32LE(cdLen, 12); end.writeUInt32LE(cdOff, 16); }
+  return new File([Buffer.concat([body, cd, name, z64, end])], "cv.docx");
+};
+const docxOk = async f => (await readDocx(f).catch(e => e.message)) === "Sara Ahmed";
+ok(await docxOk(zip()) && await docxOk(zip({ zip64: true })) && await docxOk(zip({ prefix: 500 })) && await docxOk(zip({ badOffset: true })), "Word reader handles ZIP64 and damaged files");
 
 console.log("3. API (D1 + auth + AI allowance)");
 const { DatabaseSync } = await import("node:sqlite");

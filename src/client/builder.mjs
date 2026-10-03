@@ -4,7 +4,7 @@ import { authEnabled, getUser, onAuthChange, goSignIn, signInWithGoogle } from "
 import * as store from "./store.mjs";
 import { callAI, aiMessage, onUsage, refreshUsage, aiNeedsLogin, aiAvailable } from "./ai.mjs";
 import { readResumeFile, photoToDataUrl, basicParse } from "./importer.mjs";
-import { printResume, exportDocx, exportText, exportJson, fileBase } from "./export.mjs";
+import { printResume, exportDocx, exportText, exportJson, fileBase, downloadBlob } from "./export.mjs";
 import { adSlotHTML, pushAds } from "./common.mjs";
 import { renderResume, effectiveOrder } from "/js/shared/render.mjs";
 import { TEMPLATES, TAG_LABELS, FONTS, ACCENTS, getTemplate } from "/js/shared/templates.mjs";
@@ -122,12 +122,29 @@ async function saveToCloud() {
 
 /* ============================== commit ============================== */
 const renderPreviewSoon = debounce(() => renderPreview(), 60);
+// The document title follows "Name — Job title" until the user renames it.
+const autoTitle = d => has(d.name) ? d.name.trim() + (has(d.title) ? " — " + d.title.trim() : "") : "";
+const titleBase = new WeakMap(); // doc → the automatic title it had last time we looked
+function syncTitle({ force = false } = {}) {
+  const auto = autoTitle(S.doc.data), t = (S.doc.title || "").trim();
+  if (!titleBase.has(S.doc)) {
+    // An older automatic title ("Old Name — Job") left behind after the name changed counts as automatic too.
+    titleBase.set(S.doc, t.includes(" — ") ? t : auto);
+  }
+  if (auto && auto !== t && (force || !t || t === "My resume" || t === titleBase.get(S.doc))) {
+    S.doc.title = auto;
+    const el = $("#docTitle");
+    if (el && document.activeElement !== el) el.value = auto;
+  }
+  if (auto && S.doc.title.trim() === auto) titleBase.set(S.doc, auto);
+}
 const renderThumbsSoon = debounce(() => { if (S.tab === "design") renderTemplatePicker(); }, 700);
 function changed({ editor = false, preview = true, thumbs = true } = {}) {
   if (S.doc.isExample) { S.doc.isExample = false; if (!editor) renderEditorBanner(); }
   if (editor) renderEditor();
   if (preview) renderPreviewSoon();
   if (thumbs) renderThumbsSoon();
+  syncTitle();
   saveSoon();
 }
 
@@ -508,8 +525,11 @@ function needGate() {
   if (aiNeedsLogin() && !S.user) { openSignInModal(); return true; }
   return false;
 }
-function openSignInModal(reason = "Use AI for free", note = "") {
-  const next = `/builder/${S.doc.id ? "?id=" + S.doc.id : ""}`;
+function openSignInModal(reason = "Use AI for free", note = "", open = "") {
+  const qs = new URLSearchParams();
+  if (S.doc.id) qs.set("id", S.doc.id);
+  if (open) qs.set("open", open);
+  const next = "/builder/" + (qs.toString() ? "?" + qs : "");
   if (!authEnabled) { toast(reason); return; }
   const m = openModal(`<h2>${esc(reason)}</h2><p class="sub">${note ? esc(note) + " " : ""}Sign in once and get ${esc(CFG.aiDailyLimit || 15)} free AI credits every day, plus cloud saving for all your resumes.</p>
     <ul class="perks"><li>Your current resume is kept — nothing is lost</li><li>No credit card, no payment, ever</li><li>We never post anything to your Google account</li></ul>
@@ -712,9 +732,10 @@ function applyResult(res, mode) {
     const next = normalizeResume(res.resume || {});
     if (!next.photo) next.photo = S.doc.isExample ? "" : photo;
     if (mode !== "basic" && !next.experience.length && !next.education.length && !has(next.name)) throw { code: "server", message: "The AI couldn't find resume content in this file. Try another file or paste the text." };
+    const otherPerson = has(next.name) && next.name.trim().toLowerCase() !== String(S.doc.data.name || "").trim().toLowerCase();
     S.doc.data = next;
     S.doc.isExample = false;
-    if (has(next.name) && (S.doc.title === "My resume" || !has(S.doc.title))) S.doc.title = next.name + (next.title ? " — " + next.title : "");
+    syncTitle({ force: otherPerson }); // a CV of a different person gets its own title
     S.review = mode === "basic" ? null : { mode, scoreBefore: mode === "improve" || mode === "tailor" ? (+res.scoreBefore || 0) : 0, score: +res.scoreAfter || +res.scoreBefore || 0, verdict: res.verdict || "", strengths: arr(res.strengths), issues: arr(res.issues), changes: arr(res.changes), tips: arr(res.tips), kwHit: arr(res.keywords?.matched), kwMiss: arr(res.keywords?.missing), animate: true };
   }
   S.open.add("personal"); S.open.add("experience");
@@ -755,13 +776,22 @@ document.addEventListener("click", e => { if (!e.target.closest("#dlWrap")) { dl
 dlMenu.addEventListener("click", async e => {
   const b = e.target.closest("[data-dl]"); if (!b) return;
   dlMenu.hidden = true;
+  // Downloads need a (free) account; after Google sign-in the user lands back here with this menu open.
+  if (authEnabled && !(S.user || await getUser())) return openSignInModal("Sign in to download your resume", "It's free and takes a few seconds.", "download");
   const base = fileBase(S.doc.data);
   try {
     if (b.dataset.dl === "pdf") {
-      if (!localStorage.getItem("rf:pdf-tip")) {
-        const ok = await pdfTip(); if (!ok) return;
+      const html = renderResume(S.doc.data, S.doc.settings);
+      try {
+        toast("Creating your PDF…");
+        const { buildPdf } = await import("./pdf.mjs");
+        downloadBlob(await buildPdf(html, { paper: S.doc.settings.paper, title: base }), base + ".pdf");
+      } catch (err) {
+        // Some browsers can't draw the page to a picture: fall back to the print window.
+        console.error(err);
+        if (!localStorage.getItem("rf:pdf-tip")) { const ok = await pdfTip(); if (!ok) return; }
+        await printResume(html, { paper: S.doc.settings.paper, title: base });
       }
-      await printResume(renderResume(S.doc.data, S.doc.settings), { paper: S.doc.settings.paper, title: base });
     }
     if (b.dataset.dl === "docx") { toast("Creating your Word file…"); await exportDocx(S.doc.data, S.doc.settings, base + ".docx"); }
     if (b.dataset.dl === "txt") exportText(S.doc.data, base + ".txt");
@@ -818,6 +848,7 @@ $$("[data-tab]").forEach(b => b.addEventListener("click", () => switchTab(b.data
 
 /* ============================== render all ============================== */
 function renderAll() {
+  if (!S.doc.isExample) syncTitle();
   $("#docTitle").value = S.doc.title;
   renderEditor();
   if (S.tab === "design") renderDesign();
@@ -843,7 +874,7 @@ async function boot() {
     let use = true;
     S.doc = localDoc || newDoc({ data: EXAMPLE, isExample: true });
     if (localHasWork) { renderShell(); use = await chooseReplace("Replace your current draft with this example?"); }
-    if (use) S.doc = newDoc({ data: ex.data, settings: { template: ex.template }, title: ex.title + " resume" });
+    if (use) { S.doc = newDoc({ data: ex.data, settings: { template: ex.template }, title: ex.title + " resume" }); titleBase.set(S.doc, S.doc.title); }
   } else if (q.get("new")) {
     let use = true;
     S.doc = localDoc || newDoc({ data: EXAMPLE, isExample: true });
@@ -888,6 +919,7 @@ async function boot() {
   }
   const open = q.get("open");
   if (open && MODES[open]) setTimeout(() => openAIModal(open), 300);
+  if (open === "download" && S.user) setTimeout(() => { dlMenu.hidden = false; dlBtn.setAttribute("aria-expanded", "true"); }, 300);
   // clean one-off params from the address bar
   const u = new URL(location.href);
   ["example", "new", "template", "open", "tab"].forEach(k => u.searchParams.delete(k));

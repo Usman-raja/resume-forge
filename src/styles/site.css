@@ -47,7 +47,7 @@
 [hidden]{display:none!important}
 html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-wrap:break-word}
 img,svg{max-width:100%}
 a{color:var(--accent);text-underline-offset:3px}
 button,input,textarea,select{font:inherit;color:inherit}
@@ -104,6 +104,7 @@ p{margin:0}
 .dropdown-menu a,.dropdown-menu button{display:flex;align-items:center;gap:10px;text-align:left;border:0;background:transparent;border-radius:8px;padding:9px 11px;cursor:pointer;text-decoration:none;color:var(--ink);font-size:14px;width:100%}
 .dropdown-menu a:hover,.dropdown-menu button:hover{background:var(--surface-2)}
 .dropdown-menu small{display:block;color:var(--muted);font-size:12px}
+.dropdown-menu svg{width:18px;height:18px;flex:none}
 .dropdown-menu hr{border:0;border-top:1px solid var(--line);margin:4px 2px}
 .dropdown-menu .who{padding:8px 11px 6px;font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mobile-nav{display:none}
@@ -272,9 +273,11 @@ p{margin:0}
 .swatch-row{display:flex;gap:8px;flex-wrap:wrap}
 .swatch{width:28px;height:28px;border-radius:50%;border:3px solid var(--surface);box-shadow:0 0 0 1px var(--line-2);cursor:pointer;padding:0}
 .swatch[aria-pressed="true"]{box-shadow:0 0 0 2px var(--ink)}
+.detail-even{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
 @media (max-width:900px){.detail{grid-template-columns:1fr}.detail-preview{position:static}}
 
 .prose{max-width:760px;display:grid;gap:16px;font-size:16px}
+.prose>*{min-width:0;overflow-wrap:anywhere}
 .prose h2{font-size:26px;margin-top:18px}
 .prose h3{font-size:19px;margin-top:8px;font-family:var(--f-ui);font-weight:700;letter-spacing:-.01em}
 .prose ul,.prose ol{margin:0;padding-left:22px;display:grid;gap:8px}

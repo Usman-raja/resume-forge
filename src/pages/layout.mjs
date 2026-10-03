@@ -31,7 +31,7 @@ export function header(path) {
   ${logo()}
   <nav class="nav" aria-label="Main">${NAV.map(([h, l]) => `<a href="${h}"${path.startsWith(h) ? ' aria-current="page"' : ""}>${l}</a>`).join("")}</nav>
   <div class="header-cta"><div class="user-slot"></div><a class="btn btn-primary btn-hide-m" href="/builder/">Build my resume</a>
-  <button class="menu-btn" type="button" aria-label="Menu" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div>
+  <button class="menu-btn" type="button" aria-label="Menu" aria-expanded="false"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div>
   </div><nav class="mobile-nav" hidden aria-label="Mobile">${NAV.map(([h, l]) => `<a href="${h}">${l}</a>`).join("")}<a href="/dashboard/">My resumes</a><a class="btn btn-primary" href="/builder/" style="margin-top:6px">Build my resume — free</a></nav></header>`;
 }
 

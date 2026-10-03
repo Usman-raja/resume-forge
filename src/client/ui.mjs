@@ -87,7 +87,7 @@ export function fitPage(holder, inner, maxScale = 1, pad = 0) {
   return s;
 }
 
-const P = 'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
+const P = 'width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
 export const ICON = {
   upload: `<svg viewBox="0 0 24 24" ${P}><path d="M12 15V3M7 8l5-5 5 5"/><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>`,
   download: `<svg viewBox="0 0 24 24" ${P}><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>`,

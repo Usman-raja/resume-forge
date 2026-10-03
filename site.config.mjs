@@ -8,7 +8,7 @@ export default {
   // Your live address, no trailing slash. Used for canonical links, sitemap and social cards.
   url: (env.SITE_URL || "https://resumeforge.example.com").replace(/\/$/, ""),
   tagline: "Free AI resume builder",
-  contactEmail: env.CONTACT_EMAIL || "hello@resumeforge.example.com",
+  contactEmail: env.CONTACT_EMAIL || "resumeforge.support@gmail.com",
   country: "Pakistan",
 
   // "Continue with Google" is switched on when GOOGLE_CLIENT_ID is set.
@@ -37,5 +37,5 @@ export default {
   // Google Analytics 4 measurement ID, e.g. G-XXXXXXX (optional)
   gaId: env.GA_ID || "",
   // Google Search Console verification code (optional, the content="" value)
-  googleVerification: env.GOOGLE_SITE_VERIFICATION || ""
+  googleVerification: env.GOOGLE_SITE_VERIFICATION || "Ql7EGyCo8CXBdTALQ8avA20EBb8oLIR-Dvee204LQ2c"
 };
