@@ -102,6 +102,15 @@
 
 ## 7. Social media posts
 
+**Pictures** `marketing/` folder mein hain (GitHub par bhi):
+| Picture | Kahan lagayein |
+|---|---|
+| `1-linkedin-main.png` | LinkedIn post ki main picture |
+| `2-before-after.png` | LinkedIn: 2nd picture (carousel) ya alag post |
+| `3-templates.png` | LinkedIn ya Facebook: 3rd picture |
+| `4-whatsapp-post.png` | WhatsApp groups (Roman Urdu) |
+| `5-whatsapp-status.png` | WhatsApp, Instagram ya Facebook Status/Story |
+
 ### LinkedIn (English)
 > 🚀 **I just launched Resume Forge, a 100% free AI resume builder.**
 >
