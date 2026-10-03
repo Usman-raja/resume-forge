@@ -102,6 +102,8 @@
 
 ## 7. Social media posts
 
+**Har platform ke tayyar posts:** LinkedIn, Facebook, Instagram, Stories, WhatsApp aur X, picture ke saath, `marketing/POSTS.md` mein hain.
+
 **Pictures** `marketing/` folder mein hain (GitHub par bhi):
 | Picture | Kahan lagayein |
 |---|---|
