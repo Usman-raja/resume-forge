@@ -202,3 +202,32 @@ CV banani hai? AI se 2 minute mein professional CV banayein, bilkul free 👉 ht
 ```
 Need a CV? Make a professional one with AI in 2 minutes, completely free 👉 https://resume-forge-80s.pages.dev
 ```
+
+---
+
+## LinkedIn — personal style
+**Pictures:** `1-linkedin-main.png`, `2-before-after.png`, `3-templates.png` (isi tarteeb se, ek post mein)
+
+```
+I built something, and I'd love your feedback.
+
+Many people I know are applying for jobs with an old, plain CV. Most online resume builders look free, but at the download step they ask for payment or add a watermark.
+
+So I built Resume Forge, a resume builder that is actually free.
+
+Here's how it works:
+1. Upload your old CV (PDF, Word or even a photo)
+2. AI rewrites it into a stronger, professional resume
+3. Pick from 26 ATS-friendly templates
+4. Download it as PDF or Word
+
+You can also paste a job ad to tailor your CV to it, check your ATS score, and write a cover letter.
+
+No watermark. No payment.
+
+👉 https://resume-forge-80s.pages.dev
+
+If you try it, tell me what to improve. And if you know someone who is job hunting, please share this with them.
+
+#resume #jobsearch #careers #AI #hiring
+```
